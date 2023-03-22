@@ -280,21 +280,30 @@ def verify_biomass_product(product, use_mph_schema=False):
     if use_mph_schema:
         if not check_file_against_schema(mphfile, builtin_mph_schema):
             has_errors = True
-    mph = etree.parse(os.fspath(mphfile))
-    if mph is None:
+    try:
+        etree.clear_error_log()
+        mph = etree.parse(os.fspath(mphfile))
+    except etree.Error as exc:
         logger.error(f"could not parse xml file '{mphfile}'")
+        for error in exc.error_log:
+            logger.error(f"{error.filename}:{error.line}: {error.message}")
         return 2
 
     # check encoded creation date in product name
     epoch = datetime(2000, 1, 1)
     mph_date = mph.find(f'.//{NSEOP}processingDate').text
-    compact_mph_date = base36encode(int((datetime.strptime(mph_date, '%Y-%m-%dT%H:%M:%SZ') - epoch).total_seconds()))
-    compact_creation_date = product.name[-6:]
-    creation_date = (epoch + timedelta(seconds=int(compact_creation_date, 36))).strftime('%Y-%m-%dT%H:%M:%SZ')
-    if compact_creation_date != compact_mph_date:
-        logger.error(f"compact creation date '{compact_creation_date}' ({creation_date}) does not match processing "
-                     f"date from MPH ({mph_date}|{compact_mph_date})")
+    try:
+        compact_mph_date = base36encode(int((datetime.strptime(mph_date, '%Y-%m-%dT%H:%M:%SZ') - epoch).total_seconds()))
+    except ValueError as exc:
+        logger.error(f"invalid value for processingDate in MPH ({str(exc)})")
         has_errors = True
+    else:
+        compact_creation_date = product.name[-6:]
+        creation_date = (epoch + timedelta(seconds=int(compact_creation_date, 36))).strftime('%Y-%m-%dT%H:%M:%SZ')
+        if compact_creation_date != compact_mph_date:
+            logger.error(f"compact creation date '{compact_creation_date}' ({creation_date}) does not match processing "
+                         f"date from MPH ({mph_date}|{compact_mph_date})")
+            has_errors = True
 
     # find list of files in product
     files = [item for item in product.rglob("*") if item.is_file()]
@@ -303,9 +312,15 @@ def verify_biomass_product(product, use_mph_schema=False):
     # check files that are referenced in manifest file
     for product_info in mph.findall(f'.//{NSBIO}ProductInformation'):
         href = product_info.find(f'{NSEOP}fileName/{NSOWS}ServiceReference').get(f'{NSXLINK}href')
+        if href == product.name:
+            continue
         filepath = product / href
         if filepath in files:
             files.remove(filepath)
+        else:
+            logger.error(f"MPH reference '{filepath}' does not exist")
+            has_errors = True
+            continue
         # check file size
         size_element = product_info.find(f'{NSEOP}size')
         if size_element is not None:
@@ -320,7 +335,10 @@ def verify_biomass_product(product, use_mph_schema=False):
             schemafile = product / rds.text
             if schemafile in files:
                 files.remove(schemafile)
-            if not check_file_against_schema(filepath, schemafile):
+                if not check_file_against_schema(filepath, schemafile):
+                    has_errors = True
+            else:
+                logging.error(f"schema file '{schemafile}' does not exist")
                 has_errors = True
 
     # report on files in the BIOMASS product that are not referenced by the MPH
