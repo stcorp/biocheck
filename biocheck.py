@@ -295,14 +295,14 @@ def verify_biomass_product(product, use_mph_schema=False):
     try:
         compact_mph_date = base36encode(int((datetime.strptime(mph_date, '%Y-%m-%dT%H:%M:%SZ') - epoch).total_seconds()))
     except ValueError as exc:
-        logger.error(f"invalid value for processingDate in MPH ({str(exc)})")
+        logger.error(f"invalid value for processingDate in '{mphfile}' ({str(exc)})")
         has_errors = True
     else:
         compact_creation_date = product.name[-6:]
         creation_date = (epoch + timedelta(seconds=int(compact_creation_date, 36))).strftime('%Y-%m-%dT%H:%M:%SZ')
         if compact_creation_date != compact_mph_date:
-            logger.error(f"compact creation date '{compact_creation_date}' ({creation_date}) does not match processing "
-                         f"date from MPH ({mph_date}|{compact_mph_date})")
+            logger.error(f"compact creation date in '{product}' ({creation_date}|{compact_creation_date}) does not "
+                         f"match processing date from MPH ({mph_date}|{compact_mph_date})")
             has_errors = True
 
     # find list of files in product
