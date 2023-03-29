@@ -251,17 +251,6 @@ def is_xml(filename):
     return filename.suffix.lower() == '.xml' and filename.name[0] != "."
 
 
-def md5sum(filename):
-    md5 = hashlib.md5()
-    with open(filename, 'rb') as fd:
-        while True:
-            data = fd.read(65536)
-            if not data:
-                break
-            md5.update(data)
-    return md5.hexdigest()
-
-
 def verify_biomass_product(product, use_mph_schema=False):
     has_errors = False
     has_warnings = False
