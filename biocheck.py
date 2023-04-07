@@ -36,7 +36,7 @@ NSXLINK = '{http://www.w3.org/1999/xlink}'
 
 # This is created with:
 # xsltproc filter.xslt bio.xsd | xmllint --format -
-# with filter.xlst being:
+# with filter.xslt being:
 #   <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 #                   xmlns:xsd="http://www.w3.org/2001/XMLSchema">
 #     <xsl:output omit-xml-declaration="yes"/>
@@ -112,9 +112,15 @@ builtin_mph_schema = """<?xml version="1.0"?>
     </restriction>
   </simpleType>
   <simpleType name="majorCycleIDType">
-    <restriction base="integer">
-      <minInclusive value="1"/>
-      <maxInclusive value="7"/>
+    <restriction base="string">
+      <enumeration value="1"/>
+      <enumeration value="2"/>
+      <enumeration value="3"/>
+      <enumeration value="4"/>
+      <enumeration value="5"/>
+      <enumeration value="6"/>
+      <enumeration value="7"/>
+      <enumeration value="NA"/>
     </restriction>
   </simpleType>
   <simpleType name="repeatCycleIDType">
@@ -126,7 +132,9 @@ builtin_mph_schema = """<?xml version="1.0"?>
       <enumeration value="5"/>
       <enumeration value="6"/>
       <enumeration value="7"/>
+      <enumeration value="8"/>
       <enumeration value="DR"/>
+      <enumeration value="NA"/>
     </restriction>
   </simpleType>
   <element name="ProductInformation" type="bio:ProductInformationType" substitutionGroup="eop:ProductInformation"/>
@@ -167,7 +175,6 @@ builtin_mph_schema = """<?xml version="1.0"?>
           <element name="isIncomplete" type="boolean" minOccurs="0"/>
           <element name="isPartial" type="boolean" minOccurs="0"/>
           <element name="isMerged" type="boolean" minOccurs="0"/>
-          <element name="framesList" type="string" minOccurs="0"/>
           <element name="refDoc" type="string" minOccurs="0" maxOccurs="unbounded"/>
         </sequence>
       </extension>
