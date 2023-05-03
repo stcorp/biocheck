@@ -314,7 +314,7 @@ def verify_biomass_product(product, use_mph_schema=False):
         if filepath in files:
             files.remove(filepath)
         else:
-            logger.error(f"MPH reference '{filepath}' does not exist")
+            logger.error(f"MPH reference '{href}' does not exist in product '{product}'")
             has_errors = True
             continue
         # check file size
@@ -322,8 +322,8 @@ def verify_biomass_product(product, use_mph_schema=False):
         if size_element is not None:
             filesize = filepath.stat().st_size
             if filesize != int(size_element.text):
-                logger.error(f"file size for '{filepath}' ({filesize}) does not match file size in MPH "
-                             f"({size_element.text})")
+                logger.error(f"file size for '{href}' ({filesize}) does not match file size in MPH "
+                             f"({size_element.text}) for product '{product}'")
                 has_errors = True
         # check withl XML Schema (if there is one)
         rds = product_info.find(f'{NSBIO}rds')
@@ -339,7 +339,7 @@ def verify_biomass_product(product, use_mph_schema=False):
 
     # report on files in the BIOMASS product that are not referenced by the MPH
     for file in files:
-        logging.warning(f"file '{file}' found in product but not included in MPH")
+        logging.warning(f"file '{file.relative_to(product)}' found in product '{product}' but not included in MPH")
         has_warnings = True
 
     if has_errors:
