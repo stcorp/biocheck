@@ -1,6 +1,4 @@
 import argparse
-import binascii
-import hashlib
 import logging
 import os
 import pathlib
