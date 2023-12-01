@@ -303,6 +303,7 @@ def verify_biomass_product(product, use_mph_schema=False):
 
     # find list of files in product
     files = [item for item in product.rglob("*") if item.is_file()]
+    schemafiles = []
     files.remove(mphfile)
 
     # check files that are referenced in manifest file
@@ -329,13 +330,16 @@ def verify_biomass_product(product, use_mph_schema=False):
         rds = product_info.find(f'{NSBIO}rds')
         if rds is not None:
             schemafile = product / rds.text
-            if schemafile in files:
-                files.remove(schemafile)
+            if schemafile not in schemafiles:
+                if schemafile in files:
+                    schemafiles.append(schemafile)
+                    files.remove(schemafile)
+                else:
+                    logging.error(f"schema file '{schemafile}' does not exist")
+                    has_errors = True
+            if schemafile in schemafiles:
                 if not check_file_against_schema(filepath, schemafile):
                     has_errors = True
-            else:
-                logging.error(f"schema file '{schemafile}' does not exist")
-                has_errors = True
 
     # report on files in the BIOMASS product that are not referenced by the MPH
     for file in files:
