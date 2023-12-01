@@ -287,7 +287,8 @@ def verify_biomass_product(product, use_mph_schema=False):
     epoch = datetime(2000, 1, 1)
     mph_date = mph.find(f'.//{NSEOP}processingDate').text
     try:
-        compact_mph_date = base36encode(int((datetime.strptime(mph_date, '%Y-%m-%dT%H:%M:%SZ') - epoch).total_seconds()))
+        compact_mph_date = \
+            base36encode(int((datetime.strptime(mph_date, '%Y-%m-%dT%H:%M:%SZ') - epoch).total_seconds()))
     except ValueError as exc:
         logger.error(f"invalid value for processingDate in '{mphfile}' ({str(exc)})")
         has_errors = True
