@@ -173,6 +173,7 @@ builtin_mph_schema = """<?xml version="1.0"?>
           <element name="isIncomplete" type="boolean" minOccurs="0"/>
           <element name="isPartial" type="boolean" minOccurs="0"/>
           <element name="isMerged" type="boolean" minOccurs="0"/>
+          <element name="agbTileStatus" type="string" minOccurs="0"/>
           <element name="refDoc" type="string" minOccurs="0" maxOccurs="unbounded"/>
         </sequence>
       </extension>
