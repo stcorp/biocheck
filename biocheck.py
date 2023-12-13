@@ -262,7 +262,7 @@ def locate_schema_include_files(schemafiles, files):
     for schemafile in schemafiles:
         try:
             schema = etree.parse(os.fspath(schemafile))
-            for entry in schema.findall(f"{NSXSD}include"):
+            for entry in schema.findall(f"{NSXSD}include") + schema.findall(f"{NSXSD}import"):
                 schemalocation = schemafile.parent / entry.get("schemaLocation")
                 if schemalocation in files:
                     files.remove(schemalocation)
