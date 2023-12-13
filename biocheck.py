@@ -31,6 +31,7 @@ NSBIO = '{http://earth.esa.int/biomass/1.0}'
 NSEOP = '{http://www.opengis.net/eop/2.1}'
 NSOWS = '{http://www.opengis.net/ows/2.0}'
 NSXLINK = '{http://www.w3.org/1999/xlink}'
+NSXSD = '{http://www.w3.org/2001/XMLSchema}'
 
 # This is created with:
 # xsltproc filter.xslt bio.xsd | xmllint --format -
@@ -257,6 +258,21 @@ def is_xml(filename):
     return filename.suffix.lower() == '.xml' and filename.name[0] != "."
 
 
+def locate_schema_include_files(schemafiles, files):
+    for schemafile in schemafiles:
+        try:
+            schema = etree.parse(os.fspath(schemafile))
+            for entry in schema.findall(f'{NSXSD}include'):
+                schemalocation = schemafile.parent / entry.get('schemaLocation')
+                if schemalocation in files:
+                    files.remove(schemalocation)
+                    # find schemafiles recusively
+                    locate_schema_include_files([schemalocation], files)
+        except:
+            # don't throw errors if we can't extract any includes from the schema
+            pass
+
+
 def verify_biomass_product(product, use_mph_schema=False):
     has_errors = False
     has_warnings = False
@@ -347,9 +363,12 @@ def verify_biomass_product(product, use_mph_schema=False):
                 if not check_file_against_schema(filepath, schemafile):
                     has_errors = True
 
+    locate_schema_include_files(schemafiles, files)
+
     # report on files in the BIOMASS product that are not referenced by the MPH
     for file in files:
-        logging.warning(f"file '{file.relative_to(product)}' found in product '{product}' but not included in MPH")
+        logging.warning(f"file '{file.relative_to(product)}' found in product '{product}' "
+                        "but not included in MPH or schemas")
         has_warnings = True
 
     if has_errors:
