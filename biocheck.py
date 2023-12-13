@@ -11,8 +11,8 @@ from lxml import etree
 logger = logging.getLogger(__name__)
 
 
-__copyright__ = 'Copyright (C) 2023 S[&]T, The Netherlands.'
-__version__ = '1.0'
+__copyright__ = "Copyright (C) 2023 S[&]T, The Netherlands."
+__version__ = "1.0"
 
 """Perform consistency checks on BIOMASS products.
 
@@ -27,11 +27,11 @@ Additional checks on consistency between the product name and information
 included in the MPH file are also performed.
 """
 
-NSBIO = '{http://earth.esa.int/biomass/1.0}'
-NSEOP = '{http://www.opengis.net/eop/2.1}'
-NSOWS = '{http://www.opengis.net/ows/2.0}'
-NSXLINK = '{http://www.w3.org/1999/xlink}'
-NSXSD = '{http://www.w3.org/2001/XMLSchema}'
+NSBIO = "{http://earth.esa.int/biomass/1.0}"
+NSEOP = "{http://www.opengis.net/eop/2.1}"
+NSOWS = "{http://www.opengis.net/ows/2.0}"
+NSXLINK = "{http://www.w3.org/1999/xlink}"
+NSXSD = "{http://www.w3.org/2001/XMLSchema}"
 
 # This is created with:
 # xsltproc filter.xslt bio.xsd | xmllint --format -
@@ -212,13 +212,13 @@ builtin_mph_schema = """<?xml version="1.0"?>
 
 def base36encode(number):
     """Converts an integer to a base36 string."""
-    alphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     if not isinstance(number, int):
-        raise TypeError('number must be an integer')
-    base36 = ''
-    sign = ''
+        raise TypeError("number must be an integer")
+    base36 = ""
+    sign = ""
     if number < 0:
-        sign = '-'
+        sign = "-"
         number = -number
     if 0 <= number < len(alphabet):
         return sign + alphabet[number]
@@ -229,7 +229,7 @@ def base36encode(number):
 
 
 def check_file_against_schema(xmlfile, schema):
-    if isinstance(schema, str) and schema.startswith('<?xml'):
+    if isinstance(schema, str) and schema.startswith("<?xml"):
         xmlschema = etree.XMLSchema(etree.fromstring(schema))
         schema = "built-in schema"
     else:
@@ -255,15 +255,15 @@ def check_file_against_schema(xmlfile, schema):
 
 def is_xml(filename):
     filename = pathlib.Path(filename)
-    return filename.suffix.lower() == '.xml' and filename.name[0] != "."
+    return filename.suffix.lower() == ".xml" and filename.name[0] != "."
 
 
 def locate_schema_include_files(schemafiles, files):
     for schemafile in schemafiles:
         try:
             schema = etree.parse(os.fspath(schemafile))
-            for entry in schema.findall(f'{NSXSD}include'):
-                schemalocation = schemafile.parent / entry.get('schemaLocation')
+            for entry in schema.findall(f"{NSXSD}include"):
+                schemalocation = schemafile.parent / entry.get("schemaLocation")
                 if schemalocation in files:
                     files.remove(schemalocation)
                     # find schemafiles recusively
@@ -283,7 +283,7 @@ def verify_biomass_product(product, use_mph_schema=False):
         logger.error(f"could not find '{product}'")
         return 2
 
-    mphfile = product / (product.name.lower() + '.xml')
+    mphfile = product / (product.name.lower() + ".xml")
     if not mphfile.exists():
         logger.error(f"could not find '{mphfile}'")
         return 2
@@ -302,16 +302,16 @@ def verify_biomass_product(product, use_mph_schema=False):
 
     # check encoded creation date in product name
     epoch = datetime(2000, 1, 1)
-    mph_date = mph.find(f'.//{NSEOP}processingDate').text
+    mph_date = mph.find(f".//{NSEOP}processingDate").text
     try:
         compact_mph_date = \
-            base36encode(int((datetime.strptime(mph_date, '%Y-%m-%dT%H:%M:%SZ') - epoch).total_seconds()))
+            base36encode(int((datetime.strptime(mph_date, "%Y-%m-%dT%H:%M:%SZ") - epoch).total_seconds()))
     except ValueError as exc:
         logger.error(f"invalid value for processingDate in '{mphfile}' ({str(exc)})")
         has_errors = True
     else:
         compact_creation_date = product.name[-6:]
-        creation_date = (epoch + timedelta(seconds=int(compact_creation_date, 36))).strftime('%Y-%m-%dT%H:%M:%SZ')
+        creation_date = (epoch + timedelta(seconds=int(compact_creation_date, 36))).strftime("%Y-%m-%dT%H:%M:%SZ")
         if compact_creation_date != compact_mph_date:
             logger.error(f"compact creation date in '{product}' ({creation_date}|{compact_creation_date}) does not "
                          f"match processing date from MPH ({mph_date}|{compact_mph_date})")
@@ -323,8 +323,8 @@ def verify_biomass_product(product, use_mph_schema=False):
     files.remove(mphfile)
 
     # check files that are referenced in manifest file
-    for product_info in mph.findall(f'.//{NSBIO}ProductInformation'):
-        href = product_info.find(f'{NSEOP}fileName/{NSOWS}ServiceReference').get(f'{NSXLINK}href')
+    for product_info in mph.findall(f".//{NSBIO}ProductInformation"):
+        href = product_info.find(f"{NSEOP}fileName/{NSOWS}ServiceReference").get(f"{NSXLINK}href")
         if href == product.name:
             continue
         filepath = product / href
@@ -338,7 +338,7 @@ def verify_biomass_product(product, use_mph_schema=False):
 
         # extract schema file reference
         schemafile = None
-        rds = product_info.find(f'{NSBIO}rds')
+        rds = product_info.find(f"{NSBIO}rds")
         if rds is not None:
             schemafile = product / rds.text
             if schemafile not in schemafiles:
@@ -351,7 +351,7 @@ def verify_biomass_product(product, use_mph_schema=False):
 
         if check_file:
             # check file size
-            size_element = product_info.find(f'{NSEOP}size')
+            size_element = product_info.find(f"{NSEOP}size")
             if size_element is not None:
                 filesize = filepath.stat().st_size
                 if filesize != int(size_element.text):
@@ -379,7 +379,7 @@ def verify_biomass_product(product, use_mph_schema=False):
 
 
 def main():
-    logging.basicConfig(format='%(levelname)s: %(message)s', stream=sys.stdout)
+    logging.basicConfig(format="%(levelname)s: %(message)s", stream=sys.stdout)
     logging.captureWarnings(True)
 
     # This parser is used in combination with the parse_known_args() function as a way to implement a "--version"
@@ -389,25 +389,25 @@ def main():
     # command line, the corresponding action should be invoked directly, without checking any other arguments.
     # However, the argparse module does not support user defined options with such semantics.
     version_parser = argparse.ArgumentParser(add_help=False)
-    version_parser.add_argument('--version', action='store_true', help='output version information and exit')
+    version_parser.add_argument("--version", action="store_true", help="output version information and exit")
 
-    parser = argparse.ArgumentParser(prog='biocheck', description=__doc__, parents=[version_parser])
-    parser.add_argument('-q', '--quiet', action='store_true',
-                        help='suppress standard output messages and warnings, only errors are printed to screen')
-    parser.add_argument('-s', '--schema', action='store_true',
-                        help='verify Main Product Header against schema (requires internet access)')
-    parser.add_argument('products', nargs='+', metavar='<BIOMASS product>')
+    parser = argparse.ArgumentParser(prog="biocheck", description=__doc__, parents=[version_parser])
+    parser.add_argument("-q", "--quiet", action="store_true",
+                        help="suppress standard output messages and warnings, only errors are printed to screen")
+    parser.add_argument("-s", "--schema", action="store_true",
+                        help="verify Main Product Header against schema (requires internet access)")
+    parser.add_argument("products", nargs="+", metavar="<BIOMASS product>")
 
     args, unused_args = version_parser.parse_known_args()
     if args.version:
-        print(f'biocheck v{__version__}')
+        print(f"biocheck v{__version__}")
         print(__copyright__)
         print()
         sys.exit(0)
 
     args = parser.parse_args(unused_args)
 
-    logging.getLogger().setLevel('ERROR' if args.quiet else 'INFO')
+    logging.getLogger().setLevel("ERROR" if args.quiet else "INFO")
     try:
         return_code = 0
         for arg in args.products:
@@ -418,7 +418,7 @@ def main():
                 if result < return_code or return_code == 0:
                     return_code = result
             if not args.quiet:
-                print('')
+                print("")
         sys.exit(return_code)
     except SystemExit:
         raise
@@ -426,5 +426,5 @@ def main():
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
