@@ -314,19 +314,14 @@ def verify_biomass_product(product, use_mph_schema=False):
         filepath = product / href
         if filepath in files:
             files.remove(filepath)
+            check_file = True
         else:
             logger.error(f"MPH reference '{href}' does not exist in product '{product}'")
             has_errors = True
-            continue
-        # check file size
-        size_element = product_info.find(f'{NSEOP}size')
-        if size_element is not None:
-            filesize = filepath.stat().st_size
-            if filesize != int(size_element.text):
-                logger.error(f"file size for '{href}' ({filesize}) does not match file size in MPH "
-                             f"({size_element.text}) for product '{product}'")
-                has_errors = True
-        # check withl XML Schema (if there is one)
+            check_file = False
+
+        # extract schema file reference
+        schemafile = None
         rds = product_info.find(f'{NSBIO}rds')
         if rds is not None:
             schemafile = product / rds.text
@@ -337,7 +332,18 @@ def verify_biomass_product(product, use_mph_schema=False):
                 else:
                     logging.error(f"schema file '{schemafile}' does not exist")
                     has_errors = True
-            if schemafile in schemafiles:
+
+        if check_file:
+            # check file size
+            size_element = product_info.find(f'{NSEOP}size')
+            if size_element is not None:
+                filesize = filepath.stat().st_size
+                if filesize != int(size_element.text):
+                    logger.error(f"file size for '{href}' ({filesize}) does not match file size in MPH "
+                                 f"({size_element.text}) for product '{product}'")
+                    has_errors = True
+            # check against XML Schema (if there is one)
+            if schemafile is not None and schemafile in schemafiles:
                 if not check_file_against_schema(filepath, schemafile):
                     has_errors = True
 
