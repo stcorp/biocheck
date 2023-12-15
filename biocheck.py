@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 __copyright__ = "Copyright (C) 2023 S[&]T, The Netherlands."
-__version__ = "1.0"
+__version__ = "1.1"
 
 """Perform consistency checks on BIOMASS products.
 
