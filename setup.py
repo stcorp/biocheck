@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='biocheck',
-    version='1.0',
+    version='1.1',
     description='BIOMASS Product Internal Consistency Checker',
     author='S[&]T',
     license='BSD',

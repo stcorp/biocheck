@@ -1,0 +1,10 @@
+1.1 2023-12-15
+~~~~~~~~~~~~~~
+
+* Remove warnings on schema files that are not included in the MPH but that
+  are included by other schema files in the same product.
+
+1.0 2023-12-05
+~~~~~~~~~~~~~~
+
+* First public release
